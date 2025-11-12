@@ -1,0 +1,17 @@
+{
+  "singleQuote": true,
+  "importOrder": [
+    "<BUILTIN_MODULES>",
+    "<TYPES>",
+    "^react",
+    "^next",
+    "<THIRD_PARTY_MODULES>",
+    "^@lib/(.*)$",
+    "^@components/(.*)$",
+    "^@app/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports","prettier-plugin-tailwindcss"]
+}
