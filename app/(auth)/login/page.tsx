@@ -53,16 +53,16 @@ export default function LoginPage() {
     const result = await verifyOTP(mobile, otp);
 
     if (result.success) {
-      // if (result.login) {
-      //   // User logged in successfully
-      //   setMessage('Login successful!');
-      //   router.push('/dashboard');
-      // } else {
-      //   // User needs to complete profile
-      //   router.push(`/register?mobile=${mobile}`);
-      // }
+      if (result.login) {
+        // User logged in successfully
+        setMessage('Login successful!');
+        router.push('/dashboard');
+      } else {
+        // User needs to complete profile
+        router.push(`/register?mobile=${mobile}`);
+      }
 
-      router.push(`/register?mobile=${mobile}`);
+      // router.push(`/register?mobile=${mobile}`);
     } else {
       setError(result.message);
     }
