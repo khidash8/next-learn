@@ -53,7 +53,7 @@ export function OTPInput({
           onFocus={(e) => e.target.select()}
           disabled={disabled}
           className={cn(
-            'h-12 w-12 text-center text-lg font-semibold',
+            'text-foreground h-12 w-12 text-center text-lg font-semibold',
             'focus:ring-primary focus:border-primary focus:ring-2',
           )}
         />

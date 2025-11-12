@@ -1,11 +1,36 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { PhoneInput } from '@/components/phone-input';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
+import { formatMobileNumber } from '@/lib/globals';
+import {
+  type RegisterFormData,
+  registerSchema,
+} from '@/schemas/register-schema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,75 +39,46 @@ export default function RegisterPage() {
 
   const mobileFromParams = searchParams.get('mobile') || '';
 
-  // Ensure the mobile number is in E.164 format
-  const formatMobileNumber = (mobile: string): string => {
-    if (!mobile) return '';
-
-    // Remove any existing + and spaces, then add +91
-    const cleaned = mobile.replace(/[\s\+]/g, '');
-
-    // If it starts with 91 and has 12 digits, add + prefix
-    if (cleaned.startsWith('91') && cleaned.length === 12) {
-      return `+${cleaned}`;
-    }
-
-    // If it's 10 digits, assume Indian number and add +91
-    if (cleaned.length === 10) {
-      return `+91${cleaned}`;
-    }
-
-    // If it already has + but missing country code, handle it
-    if (mobile.startsWith('+') && mobile.length < 12) {
-      return `+91${mobile.slice(1)}`;
-    }
-
-    // Return as is if it already has proper format
-    return mobile.startsWith('+') ? mobile : `+${mobile}`;
-  };
-
-  const [formData, setFormData] = useState({
-    mobile: formatMobileNumber(mobileFromParams),
-    name: '',
-    email: '',
-    qualification: '',
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      mobile: formatMobileNumber(mobileFromParams),
+      name: '',
+      email: '',
+      qualification: '',
+    },
   });
-  const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [error, setError] = useState('');
+
+  const [imagePreview, setImagePreview] = React.useState<string>('');
 
   useEffect(() => {
-    if (!formData.mobile || formData.mobile === '+') {
+    if (!form.getValues('mobile') || form.getValues('mobile') === '+') {
       router.push('/login');
     }
-  }, [formData.mobile, router]);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  }, [form, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
-        setError('Please upload a valid image file');
+        form.setError('profile_image', {
+          type: 'manual',
+          message: 'Please upload a valid image file',
+        });
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
+        form.setError('profile_image', {
+          type: 'manual',
+          message: 'Image size should be less than 5MB',
+        });
         return;
       }
 
-      setProfileImage(file);
-      setError('');
+      form.setValue('profile_image', file);
+      form.clearErrors('profile_image');
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -91,176 +87,192 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!profileImage) {
-      setError('Please upload a profile image');
-      return;
-    }
-
-    const result = await createProfile({
-      ...formData,
-      profile_image: profileImage,
-    });
+  const onSubmit = async (data: RegisterFormData) => {
+    const result = await createProfile(data);
 
     if (result.success) {
       router.push('/dashboard');
     } else {
-      setError(result.message);
+      form.setError('root', {
+        type: 'manual',
+        message: result.message,
+      });
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
+    <div className="text-muted-foreground scrollbar-hide flex max-h-[500px] w-full flex-1 items-center justify-center overflow-y-scroll rounded-lg bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-6">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-8 text-center text-2xl font-semibold text-gray-900">
             Complete Your Profile
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-1 text-center text-sm text-gray-600">
             Please provide your details to continue
           </p>
         </div>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {form.formState.errors.root && (
+              <div className="rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-800">
+                  {form.formState.errors.root.message}
+                </p>
+              </div>
+            )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Profile Image */}
-            <div className="flex flex-col items-center">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Profile Image
-              </label>
-              <div className="relative mb-4">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="h-32 w-32 rounded-full border-2 border-gray-300 object-cover"
-                  />
-                ) : (
-                  <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-gray-200">
-                    <span className="text-sm text-gray-500">No image</span>
-                  </div>
+            <div className="space-y-3">
+              {/* Profile Image */}
+              <FormField
+                control={form.control}
+                name="profile_image"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem className="flex flex-col items-center">
+                    <FormLabel className="mb-2">Profile Image</FormLabel>
+                    <div className="relative mb-3">
+                      {imagePreview ? (
+                        <Image
+                          src={imagePreview}
+                          alt="Preview"
+                          className="h-24 w-24 rounded-full border-2 border-gray-300 object-cover"
+                          width={100}
+                          height={100}
+                        />
+                      ) : (
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-gray-200">
+                          <span className="text-xs text-gray-500">
+                            No image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Supported formats: JPG, PNG, WebP. Max size: 5MB
+                    </p>
+                  </FormItem>
                 )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
-                required
-                disabled={isLoading}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Supported formats: JPG, PNG, WebP. Max size: 5MB
-              </p>
-            </div>
 
-            {/* Name */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Full Name *
-              </label>
-              <input
-                id="name"
+              {/* Name */}
+              <FormField
+                control={form.control}
                 name="name"
-                type="text"
-                required
-                className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={handleInputChange}
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email Address *
-              </label>
-              <input
-                id="email"
+              {/* Email */}
+              <FormField
+                control={form.control}
                 name="email"
-                type="email"
-                required
-                className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Qualification */}
+              <FormField
+                control={form.control}
+                name="qualification"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qualification *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger className={'w-full'}>
+                          <SelectValue placeholder="Select Qualification" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="high_school">High School</SelectItem>
+                        <SelectItem value="bachelor">
+                          Bachelor&apos;s Degree
+                        </SelectItem>
+                        <SelectItem value="master">
+                          Master&apos;s Degree
+                        </SelectItem>
+                        <SelectItem value="phd">PhD</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Mobile (Read-only from login flow) */}
+              <FormField
+                control={form.control}
+                name="mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl>
+                      <div className="mt-1">
+                        <PhoneInput
+                          value={field.value}
+                          onChange={() => {}} // Empty function to make it read-only
+                          disabled={true}
+                          className="cursor-not-allowed bg-gray-50 opacity-70"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Mobile number from your login session
+                    </p>
+                  </FormItem>
+                )}
               />
             </div>
 
-            {/* Qualification */}
-            <div>
-              <label
-                htmlFor="qualification"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Qualification *
-              </label>
-              <select
-                id="qualification"
-                name="qualification"
-                required
-                className="relative mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-                value={formData.qualification}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              >
-                <option value="">Select Qualification</option>
-                <option value="high_school">High School</option>
-                <option value="bachelor">Bachelor's Degree</option>
-                <option value="master">Master's Degree</option>
-                <option value="phd">PhD</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            {/* Mobile (Read-only from login flow) */}
-            <div>
-              <label
-                htmlFor="mobile"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Mobile Number
-              </label>
-              <div className="mt-1">
-                <PhoneInput
-                  value={formData.mobile}
-                  onChange={() => {}} // Empty function to make it read-only
-                  disabled={true}
-                  className="cursor-not-allowed bg-gray-50 opacity-70"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Mobile number from your login session
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? 'Creating Profile...' : 'Complete Profile'}
-          </button>
-        </form>
+            <Button
+              type="submit"
+              variant="next_default"
+              disabled={isLoading}
+              className="w-full"
+            >
+              {isLoading ? 'Creating Profile...' : 'Complete Profile'}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );

@@ -19,12 +19,12 @@ export function middleware(request: NextRequest) {
   }
 
   // If logged in and trying to access login/register, redirect to dashboard
-  if (
-    (accessToken && pathname.startsWith('/login')) ||
-    pathname.startsWith('/register')
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // if (
+  //   (accessToken && pathname.startsWith('/login')) ||
+  //   pathname.startsWith('/register')
+  // ) {
+  //   return NextResponse.redirect(new URL('/dashboard', request.url));
+  // }
 
   return NextResponse.next();
 }

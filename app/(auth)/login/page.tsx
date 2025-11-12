@@ -53,16 +53,16 @@ export default function LoginPage() {
     const result = await verifyOTP(mobile, otp);
 
     if (result.success) {
-      if (result.login) {
-        // User logged in successfully
-        setMessage('Login successful!');
-        router.push('/dashboard');
-      } else {
-        // User needs to complete profile
-        router.push(`/register?mobile=${mobile}`);
-      }
+      // if (result.login) {
+      //   // User logged in successfully
+      //   setMessage('Login successful!');
+      //   router.push('/dashboard');
+      // } else {
+      //   // User needs to complete profile
+      //   router.push(`/register?mobile=${mobile}`);
+      // }
 
-      // router.push(`/register?mobile=${mobile}`);
+      router.push(`/register?mobile=${mobile}`);
     } else {
       setError(result.message);
     }
@@ -89,16 +89,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex h-full w-full flex-1 items-center justify-center rounded-lg bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {step === 'mobile' ? 'Sign in to NexLearn' : 'Verify OTP'}
+          <h2 className="text-3xl font-semibold text-gray-900">
+            {step === 'mobile'
+              ? 'Enter your phone number'
+              : 'Enter the code we texted you'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             {step === 'mobile'
-              ? 'Enter your mobile number to receive an OTP'
-              : `Enter the OTP sent to ${mobile}`}
+              ? 'We use your mobile number to identify your account'
+              : `We've sent an SMS to ${mobile}`}
           </p>
         </div>
 
@@ -152,7 +154,7 @@ export default function LoginPage() {
                 variant="ghost"
                 onClick={handleBackToMobile}
                 disabled={isLoading}
-                className="text-sm"
+                className="text-foreground text-sm"
               >
                 Change mobile number
               </Button>
@@ -162,7 +164,7 @@ export default function LoginPage() {
                 variant="ghost"
                 onClick={handleResendOTP}
                 disabled={isLoading}
-                className="text-sm"
+                className="text-foreground text-sm"
               >
                 Resend OTP
               </Button>
@@ -170,6 +172,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
+              variant={'next_default'}
               disabled={isLoading || otp.length !== 6}
               className="w-full"
               size="lg"
