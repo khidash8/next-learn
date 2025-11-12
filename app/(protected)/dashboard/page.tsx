@@ -1,12 +1,15 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { Award, FileText, Settings } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { logout, isLoading } = useAuth();
+  const router = useRouter();
+  const { logout, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -19,48 +22,98 @@ export default function DashboardPage() {
     );
   }
 
+  const handleStartExam = () => {
+    router.push('/exam');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Image
-            src={'/images/Logo2.png'}
-            alt={'logo'}
-            width={100}
-            height={100}
-          />
-          <Button
-            onClick={logout}
-            className="rounded-md bg-[#177A9C] px-4 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/80 focus:ring-2 focus:outline-none"
-          >
-            Logout
-          </Button>
+          <Image src="/images/Logo2.png" alt="logo" width={100} height={100} />
+          <div className="flex items-center gap-4">
+            {user && (
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+              </div>
+            )}
+            <Button
+              onClick={logout}
+              className="rounded-md bg-[#177A9C] px-4 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/80 focus:ring-2 focus:outline-none"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col rounded-lg bg-white p-6 shadow">
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Quick Actions Card */}
-            <div className="rounded-lg border border-gray-200 p-4">
-              <h3 className="mb-3 text-lg font-medium text-gray-900">
-                Quick Actions
-              </h3>
-              <div className="space-y-2">
-                <Button className="w-full rounded-md bg-indigo-50 px-4 py-2 text-left font-medium text-indigo-700 hover:bg-indigo-100">
-                  Start Exam
-                </Button>
-                <Button className="w-full rounded-md bg-gray-50 px-4 py-2 text-left font-medium text-gray-700 hover:bg-gray-100">
-                  View Results
-                </Button>
-                <Button className="w-full rounded-md bg-gray-50 px-4 py-2 text-left font-medium text-gray-700 hover:bg-gray-100">
-                  Profile Settings
-                </Button>
-              </div>
+        {/* Welcome Section */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow">
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            Welcome back, {user?.name || 'Student'}!
+          </h1>
+          <p className="text-gray-600">
+            Ready to test your knowledge? Start your exam when you're ready.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Start Exam Card */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#177A9C]/10">
+              <FileText className="h-6 w-6 text-[#177A9C]" />
             </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              Start Exam
+            </h3>
+            <p className="mb-4 text-sm text-gray-600">
+              Begin your multiple choice question test. Make sure you have
+              enough time before starting.
+            </p>
+            <Button
+              onClick={handleStartExam}
+              className="w-full rounded-md bg-[#177A9C] px-4 py-2 text-white hover:bg-[#177A9C]/80"
+            >
+              Start Now
+            </Button>
           </div>
+        </div>
+
+        {/* Instructions Section */}
+        <div className="mt-8 rounded-lg bg-blue-50 p-6">
+          <h3 className="mb-3 text-lg font-semibold text-blue-900">
+            Exam Instructions
+          </h3>
+          <ul className="space-y-2 text-sm text-blue-800">
+            <li className="flex items-start gap-2">
+              <span className="mt-1 text-blue-600">•</span>
+              <span>
+                Ensure you have a stable internet connection before starting
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 text-blue-600">•</span>
+              <span>
+                The exam will be timed. Make sure you're ready before beginning
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 text-blue-600">•</span>
+              <span>
+                You can mark questions for review and come back to them later
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 text-blue-600">•</span>
+              <span>
+                Submit your exam before time runs out to save your answers
+              </span>
+            </li>
+          </ul>
         </div>
       </main>
     </div>
