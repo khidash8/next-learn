@@ -1,10 +1,12 @@
 'use client';
 
+import Image from 'next/image';
+
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardPage() {
-  const { user, logout, isLoading } = useAuth();
+  const { logout, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -22,9 +24,12 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            NexLearn Dashboard
-          </h1>
+          <Image
+            src={'/images/Logo2.png'}
+            alt={'logo'}
+            width={100}
+            height={100}
+          />
           <Button
             onClick={logout}
             className="rounded-md bg-[#177A9C] px-4 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/80 focus:ring-2 focus:outline-none"
@@ -37,10 +42,6 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">
-            Welcome back, {user?.name || 'User'}!
-          </h2>
-
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Quick Actions Card */}
             <div className="rounded-lg border border-gray-200 p-4">
