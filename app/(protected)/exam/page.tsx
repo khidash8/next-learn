@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -290,6 +290,15 @@ export default function ExamPage() {
         remainingTime={remainingTime}
         stats={stats}
       />
+
+      <div className={'flex w-full flex-1 justify-center p-4 lg:hidden'}>
+        <Button
+          onClick={() => setShowSubmitDialog(true)}
+          className="w-full max-w-sm rounded-lg bg-red-600 text-base font-semibold text-white hover:bg-red-700"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Test'}
+        </Button>
+      </div>
     </div>
   );
 }
