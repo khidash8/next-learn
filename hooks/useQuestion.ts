@@ -25,6 +25,7 @@ export const useQuestion = () => {
     decrementTime,
     resetExam,
     getQuestionStatus,
+    setExamResult,
   } = useQuestionStore();
 
   /**
@@ -53,13 +54,16 @@ export const useQuestion = () => {
       }));
 
       const result = await questionService.submitAnswers(answersArray);
-      resetExam();
+
+      // Store result in Zustand instead of resetting
+      setExamResult(result);
+
       return { success: true, data: result };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to submit exam';
       return { success: false, message };
     }
-  }, [questions, answers, resetExam]);
+  }, [questions, answers, setExamResult]);
 
   /**
    * Navigate to next question

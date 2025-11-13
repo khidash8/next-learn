@@ -5,9 +5,13 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+import InstructionsDialog from '@/components/exam/instruction-dialog';
+import Legends from '@/components/exam/legends';
+import SubmitDialog from '@/components/exam/submit-dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuestion } from '@/hooks/useQuestion';
+import { useQuestionStore } from '@/store/questionStore';
 import { Clock, FileText } from 'lucide-react';
 
 export default function ExamPage() {
@@ -31,6 +35,8 @@ export default function ExamPage() {
     getStats,
   } = useQuestion();
 
+  const setExamResult = useQuestionStore((state) => state.setExamResult);
+
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +48,7 @@ export default function ExamPage() {
       setIsLoading(false);
     };
     fetchQuestions();
-  }, []);
+  }, [loadQuestions]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -55,9 +61,13 @@ export default function ExamPage() {
     setIsSubmitting(true);
     const result = await submitExam();
     setIsSubmitting(false);
+    setShowSubmitDialog(false);
 
-    if (result.success) {
-      router.push(`/results/${result.data?.exam_history_id}`);
+    if (result.success && result.data) {
+      // Store result in Zustand
+      setExamResult(result.data);
+      // Navigate to results page
+      router.push(`/results/${result.data.exam_history_id}`);
     } else {
       alert(result.message || 'Failed to submit exam');
     }
@@ -89,30 +99,24 @@ export default function ExamPage() {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm">
-              <Clock className="h-5 w-5 text-gray-600" />
-              <span className="font-mono text-xl font-bold text-gray-900">
-                {formatTime(remainingTime)}
-              </span>
+            <InstructionsDialog instruction={examConfig.instruction} />
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm">
+                <Clock className="h-5 w-5 text-gray-600" />
+                <span className="font-mono text-xl font-bold text-gray-900">
+                  {formatTime(remainingTime)}
+                </span>
+              </div>
+              <Button
+                onClick={logout}
+                className="rounded-lg bg-[#177A9C] px-6 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/90"
+              >
+                Logout
+              </Button>
             </div>
-            <Button
-              onClick={logout}
-              className="rounded-lg bg-[#177A9C] px-6 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/90"
-            >
-              Logout
-            </Button>
           </div>
         </div>
-
-        {/* Instructions Bar */}
-        {examConfig.instruction && (
-          <div className="border-t bg-gray-50 px-6 py-3">
-            <div
-              className="text-sm text-gray-700"
-              dangerouslySetInnerHTML={{ __html: examConfig.instruction }}
-            />
-          </div>
-        )}
       </header>
 
       {/* Main Content */}
@@ -225,7 +229,7 @@ export default function ExamPage() {
         </div>
 
         {/* Question Navigator Sidebar */}
-        <div className="w-96">
+        <div className="hidden w-96 lg:block">
           <div className="sticky top-6 rounded-lg border bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-semibold text-gray-900">
               Question Numbers:
@@ -264,52 +268,7 @@ export default function ExamPage() {
             </div>
 
             {/* Legend */}
-            <div className="mb-6 space-y-3 border-t pt-4">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-green-500"></div>
-                <span className="text-sm text-gray-700">Attended</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-red-500"></div>
-                <span className="text-sm text-gray-700">Not Attended</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-purple-500"></div>
-                <span className="text-sm text-gray-700">Marked for Review</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-purple-700"></div>
-                <span className="text-sm text-gray-700">
-                  Answered and Marked
-                </span>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="space-y-3 border-t pt-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-700">Total Questions:</span>
-                <span className="font-bold text-gray-900">{stats.total}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">Answered:</span>
-                <span className="font-bold text-green-600">
-                  {stats.answered}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">Not Answered:</span>
-                <span className="font-bold text-red-600">
-                  {stats.notAnswered}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">Marked for Review:</span>
-                <span className="font-bold text-purple-600">
-                  {stats.marked}
-                </span>
-              </div>
-            </div>
+            <Legends />
 
             {/* Submit Button */}
             <Button
@@ -323,58 +282,14 @@ export default function ExamPage() {
       </div>
 
       {/* Submit Confirmation Dialog */}
-      {showSubmitDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
-            <h3 className="mb-4 text-xl font-bold text-gray-900">
-              Are you sure you want to submit the test?
-            </h3>
-            <div className="mb-6 space-y-3 rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-gray-700">
-                  <Clock className="h-4 w-4" />
-                  Remaining Time:
-                </span>
-                <span className="font-mono font-bold text-gray-900">
-                  {formatTime(remainingTime)}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">Total Questions:</span>
-                <span className="font-bold text-gray-900">{stats.total}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">Questions Answered:</span>
-                <span className="font-bold text-green-600">
-                  {stats.answered}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">Marked for review:</span>
-                <span className="font-bold text-purple-600">
-                  {stats.marked}
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowSubmitDialog(false)}
-                className="flex-1 rounded-lg bg-gray-200 py-3 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-[#177A9C] py-3 text-sm font-medium text-white hover:bg-[#177A9C]/90 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Test'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SubmitDialog
+        isOpen={showSubmitDialog}
+        onClose={() => setShowSubmitDialog(false)}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        remainingTime={remainingTime}
+        stats={stats}
+      />
     </div>
   );
 }

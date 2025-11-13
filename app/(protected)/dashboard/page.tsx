@@ -1,15 +1,13 @@
 'use client';
-
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Award, FileText, Settings } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { logout, isLoading, user } = useAuth();
+  const { isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -28,30 +26,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Image src="/images/Logo2.png" alt="logo" width={100} height={100} />
-          <div className="flex items-center gap-4">
-            {user && (
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
-              </div>
-            )}
-            <Button
-              onClick={logout}
-              className="rounded-md bg-[#177A9C] px-4 py-2 text-sm font-medium text-white hover:bg-[#177A9C]/80 focus:ring-2 focus:outline-none"
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Welcome Section */}
+        {/* Welcome, Section */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow">
           <h1 className="mb-2 text-2xl font-bold text-gray-900">
             Welcome back, {user?.name || 'Student'}!

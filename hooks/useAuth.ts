@@ -150,18 +150,6 @@ export const useAuth = () => {
     }
   }, [clearAuth, router]);
 
-  /**
-   * Refresh user data
-   */
-  const refreshUser = useCallback(async () => {
-    try {
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-    }
-  }, [setUser]);
-
   return {
     user,
     isAuthenticated,
@@ -170,7 +158,6 @@ export const useAuth = () => {
     verifyOTP,
     createProfile,
     logout,
-    refreshUser,
   };
 };
 

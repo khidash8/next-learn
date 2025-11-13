@@ -67,15 +67,6 @@ export const authService = {
     const response = await apiClient.post('/auth/logout');
     return response.data;
   },
-
-  /**
-   * Get current user profile (if your API supports it)
-   * This is a placeholder - adjust based on your actual API
-   */
-  getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<{ user: User }>('/auth/me');
-    return response.data.user;
-  },
 };
 
 export default authService;

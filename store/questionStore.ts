@@ -1,8 +1,18 @@
-import { QuestionListResponse, QuestionStore } from '@/types/question';
+import {
+  QuestionListResponse,
+  QuestionStore,
+  SubmitAnswersResponse,
+} from '@/types/question';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-export const useQuestionStore = create<QuestionStore>()(
+interface ExtendedQuestionStore extends QuestionStore {
+  examResult: SubmitAnswersResponse | null;
+  setExamResult: (result: SubmitAnswersResponse) => void;
+  clearExamResult: () => void;
+}
+
+export const useQuestionStore = create<ExtendedQuestionStore>()(
   devtools(
     (set, get) => ({
       questions: [],
@@ -13,6 +23,7 @@ export const useQuestionStore = create<QuestionStore>()(
       visitedQuestions: new Set(),
       isLoading: false,
       remainingTime: 0,
+      examResult: null,
 
       setQuestions: (data: QuestionListResponse) => {
         set({
@@ -88,6 +99,14 @@ export const useQuestionStore = create<QuestionStore>()(
         }
       },
 
+      setExamResult: (result: SubmitAnswersResponse) => {
+        set({ examResult: result });
+      },
+
+      clearExamResult: () => {
+        set({ examResult: null });
+      },
+
       resetExam: () => {
         set({
           questions: [],
@@ -98,6 +117,7 @@ export const useQuestionStore = create<QuestionStore>()(
           visitedQuestions: new Set(),
           isLoading: false,
           remainingTime: 0,
+          examResult: null,
         });
       },
 
