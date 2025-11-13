@@ -4,10 +4,14 @@ const REMOTE_API = 'https://nexlearn.noviindusdemosites.in';
 
 export async function POST(request: NextRequest) {
   try {
+    const token = request.headers.get('authorization');
     const formData = await request.formData();
 
     const response = await fetch(`${REMOTE_API}/auth/create-profile`, {
       method: 'POST',
+      headers: {
+        Authorization: token || '',
+      },
       body: formData,
     });
 
