@@ -53,16 +53,18 @@ export interface QuestionState {
   visitedQuestions: Set<number>;
 }
 
+export interface ExamConfig {
+  questions_count: number;
+  total_marks: number;
+  total_time: number;
+  time_for_each_question: number;
+  mark_per_each_answer: number;
+  instruction: string;
+}
+
 export interface QuestionStore extends QuestionState {
   questions: Question[];
-  examConfig: {
-    questions_count: number;
-    total_marks: number;
-    total_time: number;
-    time_for_each_question: number;
-    mark_per_each_answer: number;
-    instruction: string;
-  } | null;
+  examConfig: ExamConfig | null;
   isLoading: boolean;
   remainingTime: number;
 
